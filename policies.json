@@ -1,0 +1,6 @@
+{
+  "BackgroundModeEnabled": false,
+  "GenAILocalFoundationalModelSettings": 1,
+  "NetworkPredictionOptions": 2,
+  "HighEfficiencyModeEnabled": true
+}
