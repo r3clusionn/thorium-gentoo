@@ -48,8 +48,10 @@ On a 2x display, a wrapper that fixes GTK's file dialog size is useful (it other
 ```sh
 #!/bin/sh
 export GDK_SCALE=2 GDK_DPI_SCALE=0.5
-exec /opt/thorium/thorium-browser --force-device-scale-factor=2 "$@"
+exec /opt/thorium/thorium-browser --force-device-scale-factor=2 --use-angle=gl-egl "$@"
 ```
+
+`--use-angle=gl-egl` runs ANGLE over EGL instead of GLX. With X at depth 30 (10 bits per channel), the GLX path can't bind Chromium's 8-bit video frames and page buffers, because the screen has no depth-24 visuals, and videos play as a white rectangle.
 
 ## How it works
 
