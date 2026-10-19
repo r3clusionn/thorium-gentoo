@@ -51,6 +51,8 @@ export GDK_SCALE=2 GDK_DPI_SCALE=0.5
 exec /opt/thorium/thorium-browser --force-device-scale-factor=2 --use-angle=gl-egl "$@"
 ```
 
+The launcher in use on the laptop is `thorium` in this repo (in `~/.local/bin`, ahead of `/usr/local/bin` in `PATH`). With the `xcb8bit.so` shim from [scripts](https://github.com/r3clusionn/scripts) installed it runs ANGLE on Vulkan, so Thorium composites on the GPU at depth 30 (with GLX every fullscreen dropped out after 1.5 s; EGL has no 8-bit config there). It also turns off the on-device ML model downloads. Without the shim it falls back to the wrapper above.
+
 `--use-angle=gl-egl` runs ANGLE over EGL instead of GLX. With X at depth 30 (10 bits per channel), the GLX path can't bind Chromium's 8-bit video frames and page buffers, because the screen has no depth-24 visuals, and videos play as a white rectangle.
 
 ## How it works

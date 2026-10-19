@@ -1,0 +1,26 @@
+#!/bin/sh
+# GTK3 sizes its file dialog with the 2x DPI applied twice (4296x3222, buttons
+# off-screen). GDK_SCALE=2 + GDK_DPI_SCALE=0.5 make GTK do that math at 96 dpi;
+# the forced scale factor keeps Thorium's own UI at 2x (it would multiply in GDK_SCALE).
+export GDK_SCALE=2 GDK_DPI_SCALE=0.5
+# X runs at depth 30, where ANGLE has no 8-bit config for the root visual and
+# Thorium falls back to CPU compositing (laggy, and every video frame goes
+# through the CPU). xcb8bit makes Thorium alone use the 32-bit ARGB visual so
+# it composites on the GPU; X composites its windows onto the 10-bit screen.
+# ANGLE on Vulkan: with ANGLE's GLX backend every fullscreen (video or F11)
+# dropped back out after 1.5 s; EGL has no 8-bit config. Vulkan needs the
+# Vulkan/VA-API interop features, or the GPU process dies on the first
+# hardware-decoded frame. Source: bin/xcb8bit.c in https://github.com/r3clusionn/scripts
+# No on-device ML models (optimization guide, omnibox head suggest): ~55 MB of
+# downloads plus background work at startup (batch 17).
+nomodels=OptimizationGuideModelDownloading,OptimizationHintsFetching,OptimizationTargetPrediction,OptimizationGuideOnDeviceModel,PageContentAnnotations,OmniboxOnDeviceHeadProviderNonIncognitoTabs,OmniboxOnDeviceHeadProviderIncognito
+if [ -r /usr/local/lib/xcb8bit.so ]; then
+	export LD_PRELOAD=/usr/local/lib/xcb8bit.so${LD_PRELOAD:+:$LD_PRELOAD}
+	export XCB8BIT_EXE=/opt/thorium/thorium
+	exec /opt/thorium/thorium-browser --force-device-scale-factor=2 --use-angle=vulkan \
+		--enable-features=Vulkan,VulkanFromANGLE,DefaultANGLEVulkan,VaapiVideoDecoder,VaapiIgnoreDriverChecks,AcceleratedVideoDecodeLinuxGL,AcceleratedVideoDecodeLinuxZeroCopyGL \
+		--disable-features=$nomodels "$@"
+fi
+# Without the shim: ANGLE over EGL, because the default (GLX) path can't bind
+# 8-bit video frames at depth 30, so videos play white.
+exec /opt/thorium/thorium-browser --force-device-scale-factor=2 --use-angle=gl-egl --disable-features=$nomodels "$@"
